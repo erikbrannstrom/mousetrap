@@ -982,4 +982,9 @@
     if (typeof define === 'function' && define.amd) {
         define(Mousetrap);
     }
+
+    // expose mousetrap to node/browserify
+    if(typeof module === 'object' && module.exports) {
+        module.exports = Mousetrap;
+    }
 }) (window, document);
