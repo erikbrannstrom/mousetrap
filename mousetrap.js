@@ -878,6 +878,10 @@
          * to an empty function and deletes the corresponding key in the
          * _directMap dict.
          *
+         * the third parameter specified whether the previously bound callbacks
+         * should be returned. the default value is false, in which case Mousetrap
+         * itself will be returned.
+         *
          * TODO: actually remove this from the _callbacks dictionary instead
          * of binding an empty function
          *
@@ -885,11 +889,39 @@
          * it was defined in the bind method
          *
          * @param {string|Array} keys
-         * @param {string} action
+         * @param {string|boolean} action | returnPrevious
+         * @param {boolean} returnPrevious
          * @returns void
          */
-        unbind: function(keys, action) {
-            return Mousetrap.bind(keys, function() {}, action);
+        unbind: function(keys, action, returnPrevious) {
+            // Allow calling unbind with keys and returnPrevious only
+            if (returnPrevious === undefined && typeof action === 'boolean') {
+                returnPrevious = action;
+                action = undefined;
+            }
+
+            if (returnPrevious !== true) {
+                return Mousetrap.bind(keys, function() {}, action);
+            }
+
+            if (typeof keys === 'string') {
+                keys = [keys];
+            }
+            var previousCallbacks = [];
+            var i, info;
+            var length = keys.length;
+
+            for (i = 0; i < length; i++) {
+                info = _getKeyInfo(keys[i], action);
+                if (_callbacks.hasOwnProperty(info.key)) {
+                    previousCallbacks = previousCallbacks.concat(_callbacks[info.key]);
+                }
+            }
+
+            Mousetrap.bind(keys, function() {}, action);
+            return previousCallbacks.map(function (item) {
+                return item.callback;
+            });
         },
 
         /**
