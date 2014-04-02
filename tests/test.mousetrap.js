@@ -548,6 +548,37 @@ describe('Mousetrap.unbind', function() {
         Mousetrap.unbind('a');
         KeyEvent.simulate('a'.charCodeAt(0), 65);
         expect(spy.callCount).to.equal(1, 'callback for a should not fire after unbind');
+
+        // Ensure unbind works when setting returnPrevious to true as well
+        Mousetrap.bind('a', spy);
+        KeyEvent.simulate('a'.charCodeAt(0), 65);
+        expect(spy.callCount).to.equal(2, 'callback for a should fire');
+
+        Mousetrap.unbind('a', true);
+        KeyEvent.simulate('a'.charCodeAt(0), 65);
+        expect(spy.callCount).to.equal(2, 'callback for a should not fire after unbind');
+    });
+
+    it('unbind returns a copy of the previously bound function', function() {
+        var spy = sinon.spy();
+        Mousetrap.bind('a', spy);
+        KeyEvent.simulate('a'.charCodeAt(0), 65);
+        expect(spy.callCount).to.equal(1, 'callback for a should fire');
+
+        var prevs = Mousetrap.unbind('a', undefined, true);
+        KeyEvent.simulate('a'.charCodeAt(0), 65);
+        expect(spy.callCount).to.equal(1, 'callback for a should not fire after unbind');
+
+        var newSpy = sinon.spy();
+        Mousetrap.bind('a', newSpy);
+        KeyEvent.simulate('a'.charCodeAt(0), 65);
+        expect(newSpy.callCount).to.equal(1, 'callback should fire for new callback');
+        expect(spy.callCount).to.equal(1, 'callback should not fire for old callback');
+
+        Mousetrap.bind('a', prevs[0]);
+        KeyEvent.simulate('a'.charCodeAt(0), 65);
+        expect(newSpy.callCount).to.equal(1, 'the second callback should not fire after rebinding');
+        expect(spy.callCount).to.equal(2, 'the first callback should fire a second time');
     });
 
     it('unbind accepts an array', function() {
